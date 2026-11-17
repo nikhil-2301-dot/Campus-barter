@@ -18,7 +18,7 @@
 
 ## Live demo
 
-**Link:** _add your Render link here_
+https://campus-barter.onrender.com
 
 > The demo runs on a free plan. It may take about 30 seconds to wake up, and its data can reset when it restarts.
 
