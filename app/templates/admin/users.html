@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "components/actions.html" import link_button, post_button, button, confirm_open, dialog with context %}
+{% from "components/forms.html" import field %}
+{% from "components/display.html" import page_header, panel, status, table, empty_state, problem_state %}
+{% from "components/admin_confirm.html" import suspend_text %}
+{% block title %}Users - Campus Barter{% endblock %}
+{% block content %}
+{#- States: success (table), empty (nobody matches), problem (503). No loading state: server-rendered. -#}
+{{ page_header("Users", "Suspend or unsuspend student accounts.") }}
+<form method="get" action="{{ url_for('admin.user_list') }}" role="search" aria-label="Search users">
+  {% call panel() %}
+  <div class="filter-form">
+    {{ field("q", "Search by name or email", type="search", value=q, autocomplete="off", required=False, optional_mark=False, maxlength=100) }}
+  </div>
+  <div class="filter-actions">
+    {{ button("Search") }}
+    {{ link_button("Clear search", url_for('admin.user_list')) }}
+    {{ link_button("Dashboard", url_for('admin.dashboard')) }}
+  </div>
+  {% endcall %}
+</form>
+{% if load_problem %}
+  {{ problem_state("Users could not be loaded", "The list did not load. Reload the page; if it keeps happening, check the server log.", url_for('admin.user_list'), "Reload") }}
+{% elif not rows %}
+  {{ empty_state("No users found", "No account matches this search.", "Show all users", url_for('admin.user_list')) }}
+{% else %}
+  <p class="results-count">{{ total }} user{{ 's' if total != 1 else '' }}{% if total > rows|length %}, showing the first {{ rows|length }}{% endif %}.</p>
+  {% set table_rows = [] %}
+  {% for u in rows %}
+    {% set status_cell %}{{ status("Suspended" if u['is_suspended'] else "Active", "danger" if u['is_suspended'] else "ok") }}{% endset %}
+    {% set actions_cell %}{% if u['is_suspended'] %}{{ post_button("Unsuspend", url_for('admin.user_unsuspend', user_id=u['id'])) }}{% elif u['is_admin'] or u['id'] == me['id'] %}No actions available{% else %}{{ confirm_open("suspend-" ~ u['id'], "Suspend", url_for('admin.user_suspend', user_id=u['id'])) }}{% endif %}{% endset %}
+    {% set _ = table_rows.append([u['full_name'], u['email'], u['college_name'], u['enrollment_no'], u['year'], "Admin" if u['is_admin'] else "Student", status_cell, actions_cell]) %}
+  {% endfor %}
+  {{ table("Users", [("Name", False), ("Email", False), ("College", False), ("Enrollment", False), ("Year", False), ("Role", False), ("Status", False), ("Actions", False)], table_rows) }}
+  {% for u in rows if not u['is_suspended'] and not u['is_admin'] and u['id'] != me['id'] %}
+    {% call dialog("suspend-" ~ u['id'], "Suspend this account?") %}
+      {{ suspend_text(u) }}
+      {{ post_button("Suspend account", url_for('admin.user_suspend', user_id=u['id']), "danger") }}
+    {% endcall %}
+  {% endfor %}
+{% endif %}
+{% endblock %}

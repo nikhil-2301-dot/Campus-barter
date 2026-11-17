@@ -1,0 +1,30 @@
+{#- Site navigation. Import `with context` (it reads g.user and uses url_for).
+    `current` is the endpoint of the page being shown, so its link gets aria-current="page". -#}
+{% from "components/actions.html" import post_button with context %}
+
+{% macro _link(label, endpoint, current) -%}
+<li><a class="nav-link" href="{{ url_for(endpoint) }}"{% if current == endpoint %} aria-current="page"{% endif %}>{{ label }}</a></li>
+{%- endmacro %}
+
+{% macro navbar(current=None) %}
+<header class="site-header">
+  <a class="brand" href="{{ url_for('main.index') }}">Campus Barter</a>
+  <nav aria-label="Main">
+    <ul class="nav-list">
+      {{ _link("Listings", "listings.browse", current) }}
+      {% if g.user %}
+        {{ _link("Post an item", "listings.create", current) }}
+        {{ _link("My listings", "listings.my_listings", current) }}
+        {{ _link("Requests sent", "exchange.sent", current) }}
+        {{ _link("Requests received", "exchange.received", current) }}
+        {% if g.user['is_admin'] %}{{ _link("Admin", "admin.dashboard", current) }}{% endif %}
+        {{ _link(g.user['full_name'], "auth.profile", current) }}
+        <li>{{ post_button("Log out", url_for('auth.logout')) }}</li>
+      {% else %}
+        {{ _link("Log in", "auth.login", current) }}
+        {{ _link("Sign up", "auth.signup", current) }}
+      {% endif %}
+    </ul>
+  </nav>
+</header>
+{% endmacro %}

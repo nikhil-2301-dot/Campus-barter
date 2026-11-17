@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "components/actions.html" import link_button, post_button with context %}
+{% from "components/display.html" import page_header, panel %}
+{% block title %}Delete listing - Campus Barter{% endblock %}
+{% block content %}
+<div class="narrow">
+{{ page_header("Delete this listing?", "This page asks before anything is removed.") }}
+{% call panel(listing['title']) %}
+  <p>The listing will no longer be shown to anyone. Requests still waiting for it will be declined, and an accepted request will be cancelled. This cannot be undone.</p>
+  <div class="filter-actions">
+    {{ post_button("Delete listing", url_for('listings.delete', listing_id=listing['id']), "danger") }}
+    {{ link_button("Keep listing", url_for('listings.view', listing_id=listing['id'])) }}
+  </div>
+{% endcall %}
+</div>
+{% endblock %}

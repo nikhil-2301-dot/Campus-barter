@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "components/forms.html" import field, select, textarea, photo_field, form_section, problem_summary %}
+{% from "components/actions.html" import button, link_button, post_button with context %}
+{% from "components/display.html" import page_header, listing_photo, panel %}
+{% set editing = action == 'edit' %}
+{% block title %}{% if editing %}Edit listing{% else %}Post an item{% endif %} - Campus Barter{% endblock %}
+{% block content %}
+<div class="narrow">
+{% if editing %}
+  {{ page_header("Edit listing", "Change the details below. The item stays visible to others while you edit.") }}
+{% else %}
+  {{ page_header("Post an item", "Describe what you can swap, lend or give away. Other students in your college community will see it.") }}
+{% endif %}
+{% set summary_fields = [("title", "Title"), ("category", "Item type"), ("condition", "Condition"), ("description", "Description"), ("mode", "Offered as"), ("wanted_in_return", "Wanted in return"), ("photo", "Photo")] %}
+{{ problem_summary(problems, summary_fields) }}
+
+<form method="post" enctype="multipart/form-data" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% call form_section("About the item") %}
+    {{ field("title", "Title", value=form_data.get('title', ''), problem=problems.get('title'), maxlength=limits.title) }}
+    {{ select("category", "Item type", category_options, value=form_data.get('category', ''), problem=problems.get('category')) }}
+    {{ select("condition", "Condition", condition_options, value=form_data.get('condition', ''), problem=problems.get('condition')) }}
+    {{ textarea("description", "Description", value=form_data.get('description', ''), problem=problems.get('description'), required=False, maxlength=limits.description) }}
+  {% endcall %}
+  {% call form_section("How you offer it") %}
+    {{ select("mode", "Offered as", mode_options, value=form_data.get('mode', ''), problem=problems.get('mode')) }}
+    {{ field("wanted_in_return", "Wanted in return", value=form_data.get('wanted_in_return') or '', problem=problems.get('wanted_in_return'), required=False, maxlength=limits.wanted_in_return, hint="Only used when the item is offered as a swap; it is ignored for lend and give away.") }}
+  {% endcall %}
+  {% call form_section("Photo") %}
+    {% if editing and listing and listing['photo_key'] %}
+      <div class="current-photo">{{ listing_photo(listing['photo_key'], listing['title'], "card") }}</div>
+      <p class="field-hint">This is the current photo. To replace it, choose a new file below and press Save changes.</p>
+    {% endif %}
+    {{ photo_field("photo", "Choose a photo" if not (editing and listing and listing['photo_key']) else "Replace the photo", problem=problems.get('photo'), hint=photo_hint) }}
+  {% endcall %}
+  <div class="filter-actions">
+    {{ button("Save changes" if editing else "Post an item") }}
+    {{ link_button("Cancel", url_for('listings.view', listing_id=listing['id']) if editing and listing else url_for('listings.browse')) }}
+  </div>
+</form>
+{% if editing and listing and listing['photo_key'] %}
+  <div class="photo-remove">
+  {% call panel("Remove the photo") %}
+    <p>The photo is deleted from the site. The rest of the listing stays as it is.</p>
+    {{ post_button("Remove photo", url_for('listings.remove_photo', listing_id=listing['id']), "danger") }}
+  {% endcall %}
+  </div>
+{% endif %}
+</div>
+{% endblock %}

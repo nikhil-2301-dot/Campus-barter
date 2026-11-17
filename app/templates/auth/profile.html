@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "components/forms.html" import field, select, form_section, problem_summary %}
+{% from "components/actions.html" import button with context %}
+{% from "components/display.html" import page_header %}
+{% block title %}Your profile - Campus Barter{% endblock %}
+{% block content %}
+<div class="narrow">
+  {{ page_header("Your profile", "You are signed in as " ~ email ~ ". The email address cannot be changed.") }}
+{% set summary_fields = [("full_name", "Full name"), ("college_name", "College name"), ("branch", "Branch"), ("year", "Year"), ("enrollment_no", "Enrollment number"), ("phone", "Phone / WhatsApp"), ("social_link", "Reddit / Instagram"), ("address", "Address")] %}
+  {{ problem_summary(problems, summary_fields) }}
+  <form method="post" action="{{ url_for('auth.profile') }}" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% call form_section("About you") %}
+      {{ field("full_name", "Full name", value=values.get("full_name", ""), problem=problems.get("full_name"), autocomplete="name", maxlength=limits.full_name) }}
+      {{ field("college_name", "College name", value=values.get("college_name", ""), problem=problems.get("college_name"), autocomplete="organization", maxlength=limits.college_name) }}
+      {{ field("branch", "Branch", value=values.get("branch", ""), problem=problems.get("branch"), autocomplete="off", maxlength=limits.branch) }}
+      {{ select("year", "Year", year_options, value=values.get("year", ""), problem=problems.get("year")) }}
+      {{ field("enrollment_no", "Enrollment number", value=values.get("enrollment_no", ""), problem=problems.get("enrollment_no"), autocomplete="off", maxlength=limits.enrollment_no) }}
+    {% endcall %}
+    {% call form_section("Contact details", hint="Private. Another student sees these only while a request between you is accepted.") %}
+      {{ field("phone", "Phone / WhatsApp", type="tel", value=values.get("phone", ""), problem=problems.get("phone"), required=False, hint="Digits only, 10 to 15 of them. A leading + is allowed.", autocomplete="tel", maxlength=limits.phone) }}
+      {{ field("social_link", "Reddit / Instagram", value=values.get("social_link", ""), problem=problems.get("social_link"), required=False, hint="Reddit u/username, Instagram @handle, or a full https:// link.", autocomplete="off", maxlength=limits.social_link) }}
+      {{ field("address", "Address", value=values.get("address", ""), required=False, hint="Shown only to the other student after a request is accepted.", autocomplete="off", maxlength=limits.address) }}
+    {% endcall %}
+    <div class="form-actions">{{ button("Save profile") }}</div>
+  </form>
+</div>
+{% endblock %}

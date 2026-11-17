@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "components/actions.html" import link_button, post_button, confirm_open, dialog with context %}
+{% from "components/display.html" import page_header, panel, title_block %}
+{% block title %}Report {{ report['id'] }} - Campus Barter{% endblock %}
+{% block content %}
+{#- One report: success state only (an unknown id is the 404 page). Server-rendered: no loading state. -#}
+{{ page_header("Report", "Only admins see who reported.") }}
+{{ title_block(report['listing_title'],
+               [("Item type", report['listing_category']), ("Listing status", report['listing_status']|status_label),
+                ("Owner", report['owner_name'] ~ ", " ~ report['owner_college']),
+                ("Reported by", report['reporter_name'] ~ ", " ~ report['reporter_college']),
+                ("Date", report['created_at'][:10])],
+               status_label=report['status']|report_status_label, status_kind=report['status']|report_status_kind, level=2) }}
+{% call panel("Reason") %}
+  <p class="listing-description">{{ report['reason'] }}</p>
+{% endcall %}
+{% call panel("Actions") %}
+<div class="filter-actions">
+  {% if can_close %}
+    {{ post_button("Resolve report", url_for('admin.report_resolve', report_id=report['id']), "primary") }}
+    {{ post_button("Dismiss report", url_for('admin.report_dismiss', report_id=report['id'])) }}
+  {% endif %}
+  {% if can_remove %}
+    {{ confirm_open("remove-listing", "Remove listing", url_for('admin.listing_remove', listing_id=report['listing_id'])) }}
+    {{ link_button("View listing", url_for('listings.view', listing_id=report['listing_id'])) }}
+  {% endif %}
+  {{ link_button("Back to reports", url_for('admin.report_list')) }}
+</div>
+{% if not can_close %}<p>This report is already closed.</p>{% endif %}
+{% endcall %}
+{% if can_remove %}
+  {% call dialog("remove-listing", "Remove this listing?") %}
+    <p><strong>{{ report['listing_title'] }}</strong> will no longer be shown to anyone. Requests still waiting for it will be declined, an accepted request will be cancelled, and its open reports will be resolved. This cannot be undone.</p>
+    {{ post_button("Remove listing", url_for('admin.listing_remove', listing_id=report['listing_id']), "danger") }}
+  {% endcall %}
+{% endif %}
+{% endblock %}

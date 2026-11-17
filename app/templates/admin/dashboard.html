@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "components/actions.html" import link_button %}
+{% from "components/display.html" import page_header, title_block, status, table, empty_state, problem_state %}
+{% block title %}Admin - Campus Barter{% endblock %}
+{% block content %}
+{#- States: success (numbers + newest open reports), empty (no open reports), problem (503, numbers could not be read).
+    No loading state: built on the server, no asynchronous step. -#}
+{{ page_header("Admin dashboard", "Review reports, remove listings and suspend accounts.") }}
+{% if load_problem %}
+  {{ problem_state("The dashboard could not be loaded", "The numbers did not load. Reload the page; if it keeps happening, check the server log.", url_for('admin.dashboard'), "Reload") }}
+{% else %}
+  {{ title_block("Right now", [("Open reports", counts['open_reports']), ("Available listings", counts['available_listings']), ("Suspended users", counts['suspended_users'])]) }}
+  <div class="toolbar">
+    {{ link_button("All reports", url_for('admin.report_list', status='all')) }}
+    {{ link_button("Users", url_for('admin.user_list')) }}
+    {{ link_button("Campuses", url_for('admin.campus_list')) }}
+  </div>
+  {% if not newest %}
+    {{ empty_state("No open reports", "When a student reports a listing it will appear here.", "See all reports", url_for('admin.report_list', status='all')) }}
+  {% else %}
+    {% set rows = [] %}
+    {% for r in newest %}
+      {% set item_cell %}<a href="{{ url_for('admin.report_detail', report_id=r['id']) }}">{{ r['listing_title'] }}</a>{% endset %}
+      {% set status_cell %}{{ status(r['status']|report_status_label, r['status']|report_status_kind) }}{% endset %}
+      {% set _ = rows.append([item_cell, r['reporter_name'], r['created_at'][:10], status_cell]) %}
+    {% endfor %}
+    {{ table("Newest open reports", [("Listing", False), ("Reported by", False), ("Date", False), ("Status", False)], rows) }}
+  {% endif %}
+{% endif %}
+{% endblock %}

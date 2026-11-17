@@ -1,0 +1,6 @@
+# Extra packages for the tests, the accessibility audit (C22).
+# Install:  pip install -r requirements-dev.txt     (this file includes requirements.txt)
+-r requirements.txt
+beautifulsoup4==4.15.0
+soupsieve==3.0.3
+pillow==13.0.0

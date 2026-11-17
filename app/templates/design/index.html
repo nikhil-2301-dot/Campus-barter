@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% from "components/forms.html" import field, select, textarea, photo_field, checkbox, problem_summary, form_section %}
+{% from "components/actions.html" import button, link_button, post_button, dialog_open, dialog, confirm_open with context %}
+{% from "components/landing.html" import step_list, type_grid, stamp_row %}
+{% from "components/illustrations.html" import illustration %}
+{% from "components/display.html" import status, panel, title_block, listing_card, page_header, alert, table, pagination, empty_state, problem_state, loading_state %}
+{% block title %}Component library - Campus Barter{% endblock %}
+{% block content %}
+{{ page_header("Component library", "Developer page. Every component in every state, built from the macros in templates/components/. Not available in production.") }}
+
+<h2>Page header and navigation</h2>
+<p class="design-note">The title at the top of this page is page_header(). The navigation bar above it is navbar(); base.html puts it on every page, so it is shown here once, not repeated.</p>
+
+<h2>Buttons</h2>
+<div class="design-row">
+  {{ button("Post an item") }}
+  {{ button("Send request", variant="secondary") }}
+  {{ button("Remove listing", variant="danger") }}
+  {{ button("Not available yet", disabled=True) }}
+  {{ link_button("Browse listings", url_for('listings.browse')) }}
+  {{ post_button("Log out (POST form with CSRF token)", url_for('design.index')) }}
+</div>
+
+<h2>Form fields</h2>
+{{ problem_summary({"demo_email": "Enter a valid email address, for example name@gmail.com.", "demo_condition": "Choose the condition of the item.", "demo_description": "Describe the item in at least a few words.", "demo_photo_big": "That photo is larger than 2 MB. Choose a smaller one.", "demo_agree": "Tick the box to continue."}, [("demo_title", "Item name"), ("demo_email", "Email"), ("demo_condition", "Condition"), ("demo_description", "Description"), ("demo_photo_big", "Photo (refused)"), ("demo_agree", "I have read the swap rules")]) }}
+<form method="post" action="{{ url_for('design.index') }}" enctype="multipart/form-data" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% call form_section("Item details", hint="A form section groups related fields under a legend.") %}
+  {{ field("demo_title", "Item name", value="Mini drafter (Omega)", hint="Use the name people would search for.") }}
+  {{ field("demo_phone", "Phone number", type="tel", autocomplete="tel", required=False, hint="Shown only after you accept a request.") }}
+  {{ field("demo_email", "Email", type="email", autocomplete="email", value="not-an-email", problem="Enter a valid email address, for example name@gmail.com.") }}
+  {{ field("demo_locked", "Enrollment number", value="IT-2024-001", disabled=True) }}
+  {% endcall %}
+  {{ select("demo_category", "Item type", [("Books", "Books"), ("Notes", "Notes"), ("Lab coats", "Lab coats")], value="Notes") }}
+  {{ select("demo_condition", "Condition", [("new", "New"), ("good", "Good")], problem="Choose the condition of the item.") }}
+  {{ textarea("demo_message", "Message to the owner", hint="Up to 500 characters.", maxlength=500, required=False) }}
+  {{ textarea("demo_description", "Description", value="", problem="Describe the item in at least a few words.") }}
+  {{ photo_field("demo_photo", "Photo", hint="JPEG, PNG or WebP, up to 2 MB. One photo per listing.") }}
+  {{ photo_field("demo_photo_big", "Photo (refused)", problem="That photo is larger than 2 MB. Choose a smaller one.") }}
+  {{ checkbox("demo_terms", "I will hand the item over on campus", checked=True) }}
+  {{ checkbox("demo_agree", "I have read the swap rules", problem="Tick the box to continue.") }}
+  {{ button("Save changes") }}
+</form>
+
+<h2>Status stamps</h2>
+<div class="design-row">
+  {{ status("Available", "ok") }}
+  {{ status("Reserved", "warning") }}
+  {{ status("Pending", "info") }}
+  {{ status("Declined", "danger") }}
+  {{ status("Closed", "neutral") }}
+</div>
+<p class="design-note">Request statuses use the same stamps (words and colours come from constants.py).</p>
+<div class="design-row">
+  {% for value in ["pending", "accepted", "completed", "declined", "cancelled"] %}
+    {{ status(value|request_status_label, value|request_status_kind) }}
+  {% endfor %}
+</div>
+<p class="design-note">Report statuses (admin area) use the same stamps; users are shown as Active or Suspended.</p>
+<div class="design-row">
+  {% for value in ["open", "resolved", "dismissed"] %}
+    {{ status(value|report_status_label, value|report_status_kind) }}
+  {% endfor %}
+  {{ status("Active", "ok") }}
+  {{ status("Suspended", "danger") }}
+</div>
+
+<h2>Alerts</h2>
+{{ alert("Listing posted. Other students can now find it.", "ok") }}
+{{ alert("Your request was sent. The owner will see it under Requests received.", "info") }}
+{{ alert("This item is reserved for another request.", "warning") }}
+{{ alert("Could not save the listing. Fix the fields marked below and send it again.", "danger") }}
+
+<h2>Title block</h2>
+{{ title_block("Mini drafter (Omega)",
+               [("Item type", "Mini drafter"), ("Condition", "Good"), ("Offered as", "Lend"), ("Owner", "A. Sharma, Third year")],
+               status_label="Available", status_kind="ok",
+               wide_rows=[("Wanted in return", "Engineering mathematics book")]) }}
+{{ title_block("Lab coat (size M)", [("Item type", "Lab coats"), ("Offered as", "Give away")], status_label="Reserved", status_kind="warning", level=3) }}
+
+<h2>Listing card</h2>
+<ul class="listing-grid">
+  <li>{{ listing_card("Mini drafter (Omega)", url_for('design.index'), [("Item type", "Mini drafter"), ("Condition", "Good"), ("Owner", "A. Sharma")], "Lend") }}</li>
+  <li>{{ listing_card("Engineering mathematics book", url_for('design.index'), [("Item type", "Books"), ("Condition", "Fair"), ("Owner", "R. Verma")], "Swap") }}</li>
+</ul>
+
+<h2>Panel</h2>
+{% call panel("Contact details") %}
+  <p>Shown to both students only while a request is accepted.</p>
+{% endcall %}
+
+<h2>Table</h2>
+{{ table("Requests received", [("Item", False), ("From", False), ("Messages", True)],
+         [("Mini drafter (Omega)", "R. Verma", 2), ("Data structures notes", "S. Iyer", 11)]) }}
+
+<h2>Pagination</h2>
+{{ pagination(page, pages, "design.index") }}
+<p class="design-note">Pages 1 to {{ pages }}. Anything outside that range falls back to the nearest valid page.</p>
+
+<h2>Dialog</h2>
+<div class="design-row">{{ dialog_open("demo-remove", "Remove listing...", variant="danger") }}</div>
+{% call dialog("demo-remove", "Remove this listing?") %}
+  <p>Pending requests for it will be declined. This cannot be undone.</p>
+  {{ post_button("Remove listing", url_for('design.index'), variant="danger") }}
+{% endcall %}
+
+<h2>Delete with and without JavaScript</h2>
+<p class="design-note">Without JavaScript this is a plain link to a confirmation page. With JavaScript it is a button that opens the dialog.</p>
+<div class="design-row">{{ confirm_open("demo-confirm", "Delete", url_for('design.index'), "danger") }}</div>
+{% call dialog("demo-confirm", "Delete this listing?") %}
+  <p>It will no longer be shown to anyone. This cannot be undone.</p>
+  {{ post_button("Delete listing", url_for('design.index'), variant="danger") }}
+{% endcall %}
+
+<h2>Landing page pieces</h2>
+<p class="design-note">stamp_row() lists the ways to offer an item; step_list() numbers a real sequence; type_grid() links to the listings of one item type.</p>
+{{ stamp_row(["Swap", "Lend", "Give away"], "Ways to offer an item") }}
+{{ step_list([("Post what you have", "List an item and say what you would like in return."), ("Send a request", "Ask the owner. Contact details stay hidden."), ("Meet and hand over", "After the owner accepts, you both see contact details.")]) }}
+{{ type_grid([("Books", url_for('design.index'), "12 available"), ("Mini drafter", url_for('design.index'), "None available"), ("Lab coats", url_for('design.index'), "3 available")]) }}
+
+<h2>Illustrations</h2>
+<p class="design-note">illustration() draws a decorative line drawing as inline SVG (aria-hidden, colours from tokens). "drafting" is the landing hero; "box" sits in every empty state. The landing hero also plays a short rise-in reveal on page load, which is off when the system asks for reduced motion.</p>
+<div class="design-row">{{ illustration("drafting", "hero-art") }}{{ illustration("box", "state-art") }}</div>
+
+<h2>Data states</h2>
+<p class="design-note">Every data view has four states. Success is the normal content shown above.</p>
+{{ loading_state("Loading listings") }}
+{{ empty_state("No listings match your search", "Try a different word or clear the filters, or post the item you are looking for.", "Post an item", url_for('listings.create')) }}
+{{ problem_state("Listings could not be loaded", "The list did not load. Reload the page; if it keeps happening, tell an admin.", url_for('design.index'), "Reload") }}
+{% endblock %}

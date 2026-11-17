@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "components/actions.html" import post_button, confirm_open, dialog, link_button with context %}
+{% from "components/display.html" import page_header, title_block, alert %}
+{% from "components/request_confirm.html" import confirm_text %}
+{% block title %}Request for {{ req['listing_title'] }} - Campus Barter
+{% endblock %}
+{% block content %}
+{#- One request, seen by its owner or its requester (nobody else gets here: the route answers 404).
+    Phone, address, email and social link are written into the page ONLY while the request is accepted
+    or completed: `contact` is None in every other state. -#}
+{% set item_cell %}<a href="{{ url_for('listings.view', listing_id=req['listing_id']) }}">{{ req['listing_title'] }}</a>{% endset %}
+{% set wide = [] %}
+{% if req['offered_title'] %}{% set _ = wide.append(("Offered in return", req['offered_title'])) %}{% endif %}
+{% if req['message'] %}{% set _ = wide.append(("Message", req['message'])) %}{% endif %}
+
+{{ page_header("Request for " ~ req['listing_title'],
+               ("%s asked you for this item." % req['requester_name']) if is_owner else ("You asked %s for this item." % req['owner_name'])) }}
+
+{{ title_block(req['listing_title'],
+               [("Item", item_cell), ("Offered as", req['listing_mode']|mode_label),
+                ("Owner", req['owner_name'] ~ ", " ~ req['owner_college']),
+                ("Requested by", req['requester_name'] ~ ", " ~ req['requester_college'] ~ ", " ~ req['requester_branch'] ~ " (" ~ req['requester_year'] ~ ")")],
+               status_label=req['status']|request_status_label, status_kind=req['status']|request_status_kind,
+               wide_rows=wide) }}
+
+{% if req['status'] == 'pending' and is_owner %}
+  {{ alert("Accept to share contact details with " ~ req['requester_name'] ~ ", or decline.", "info") }}
+{% elif req['status'] == 'pending' %}
+  {{ alert("Waiting for " ~ req['owner_name'] ~ " to answer. Contact details are shared with both students only after the owner accepts.", "info") }}
+{% elif req['status'] == 'accepted' %}
+  {{ alert("Accepted. Arrange the handover with the contact details below, then mark it as " ~ ("returned" if req['listing_mode'] == 'lend' else "completed") ~ ".", "ok") }}
+{% elif req['status'] == 'completed' %}
+  {{ alert("This exchange is complete.", "ok") }}
+{% else %}
+  {{ alert("This request is closed. Contact details are not shown for a " ~ req['status'] ~ " request.", "info") }}
+{% endif %}
+
+{% if contact %}
+<section class="contact" aria-label="Contact details">
+  {% set contact_rows = [("College", contact['college_name'] ~ ", " ~ contact['branch'] ~ " (" ~ contact['year'] ~ ")"),
+                         ("Email", contact['email']),
+                         ("Phone / WhatsApp", contact['phone'] or 'not provided')] %}
+  {% if contact['social_link'] %}{% set _ = contact_rows.append(("Social", contact['social_link'])) %}{% endif %}
+  {% if contact['address'] %}{% set _ = contact_rows.append(("Address", contact['address'])) %}{% endif %}
+  {{ title_block("Contact details of " ~ contact['full_name'], contact_rows,
+                 wide_rows=[("Safety", "Meet in a public place on campus, in daylight.")]) }}
+</section>
+{% endif %}
+
+{% if actions %}
+<div class="filter-actions">
+  {% for a in actions %}
+    {% if a in confirmed_actions %}
+      {{ confirm_open("confirm-" ~ a, labels[a], url_for('exchange.change', request_id=req['id'], action=a)) }}
+    {% else %}
+      {{ post_button(labels[a], url_for('exchange.change', request_id=req['id'], action=a), "primary") }}
+    {% endif %}
+  {% endfor %}
+</div>
+{% for a in actions if a in confirmed_actions %}
+  {% call dialog("confirm-" ~ a, "Decline this request?" if a == "decline" else "Cancel this request?", "Keep request") %}
+    {{ confirm_text(a, req) }}
+    {{ post_button(labels[a], url_for('exchange.change', request_id=req['id'], action=a), "danger") }}
+  {% endcall %}
+{% endfor %}
+{% endif %}
+
+<p class="back-row">{{ link_button("Back to requests", url_for('exchange.received' if is_owner else 'exchange.sent')) }}</p>
+
+{% endblock %}

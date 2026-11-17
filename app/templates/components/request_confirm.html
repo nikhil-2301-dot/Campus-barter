@@ -1,0 +1,11 @@
+{#- The sentence that explains what Decline / Cancel does on an exchange request. Used by the dialog on the
+    request page and by the plain confirm page, so both always say the same thing. -#}
+{% macro confirm_text(action, req) %}
+{% if action == 'decline' %}
+  <p>Decline <strong>{{ req['requester_name'] }}</strong>'s request for <strong>{{ req['listing_title'] }}</strong>? They will see it as declined. This cannot be undone.</p>
+{% elif req['status'] == 'accepted' %}
+  <p>Cancel the accepted request for <strong>{{ req['listing_title'] }}</strong>? Contact details are hidden again and the item becomes available to other students. This cannot be undone.</p>
+{% else %}
+  <p>Cancel your request for <strong>{{ req['listing_title'] }}</strong>? The owner will see it as cancelled. You can send a new request later.</p>
+{% endif %}
+{% endmacro %}

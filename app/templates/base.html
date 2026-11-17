@@ -1,0 +1,43 @@
+{% from "components/nav.html" import navbar with context -%}
+{% from "components/display.html" import alert -%}
+{% set flash_kinds = {"success": "ok", "error": "danger", "warning": "warning", "info": "info"} -%}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Campus Barter{% endblock %}</title>
+  <meta name="description" content="{% block description %}Campus Barter: swap, lend or give books, notes and other study resources with classmates in your college.{% endblock %}">
+  <meta name="theme-color" content="#EEF1EC">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Campus Barter">
+  <meta property="og:title" content="{{ self.title()|striptags|trim }}">
+  <meta property="og:description" content="{{ self.description()|striptags|trim }}">
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" sizes="32x32">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  {% block head_extra %}{% endblock %}
+  <script src="{{ url_for('static', filename='js/dialog.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/submit-once.js') }}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  {% block shell %}
+  {{ navbar(request.endpoint) }}
+  <main class="page" id="main" tabindex="-1">
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+      {{ alert(message, flash_kinds.get(category, "info")) }}
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">
+    <p>Campus Barter: swap, lend or give study resources inside your college.</p>
+  </footer>
+  {% endblock %}
+</body>
+</html>

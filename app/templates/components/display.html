@@ -1,0 +1,136 @@
+{#- Display components: panel, title block, status stamp, alert, table, pagination and the three
+    non-success states (loading, empty, problem). The success state is the normal content. -#}
+{% from "components/illustrations.html" import illustration -%}
+
+{# kind: ok | danger | info | warning | neutral. The text always says the status (never colour alone). #}
+{% macro status(label, kind="neutral") %}
+<span class="stamp stamp-{{ kind }}">{{ label }}</span>
+{% endmacro %}
+
+{# The page title: one heading (an h1 unless `level` says otherwise) plus an optional lead sentence.
+   Every page starts with this, so titles look and sit the same everywhere. #}
+{% macro page_header(title, lead=None, level=1) %}
+<div class="page-header">
+  <h{{ level }} class="page-title">{{ title }}</h{{ level }}>
+  {% if lead %}<p class="page-lead">{{ lead }}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{# A plain panel with an optional heading. Body goes in the {% call %} block. #}
+{% macro panel(title=None, level=2) %}
+<section class="panel">
+  {% if title %}<h{{ level }} class="panel-title">{{ title }}</h{{ level }}>{% endif %}
+  {{ caller() }}
+</section>
+{% endmacro %}
+
+{# The title block (the memorable element of the design): a ruled grid of labelled facts.
+   rows: list of (label, value) pairs. status_label/status_kind add the stamp in the title row.
+   `wide_rows`: same shape, drawn full-width under the grid. #}
+{% macro title_block(title, rows, status_label=None, status_kind="neutral", level=2, wide_rows=()) %}
+<article class="title-block">
+  <header class="title-block-head">
+    <h{{ level }} class="title-block-title">{{ title }}</h{{ level }}>
+    {% if status_label %}{{ status(status_label, status_kind) }}{% endif %}
+  </header>
+  <dl class="title-block-grid">
+    {% for label, value in rows %}
+      <div class="title-block-cell"><dt>{{ label }}</dt><dd>{{ value }}</dd></div>
+    {% endfor %}
+  </dl>
+  {% if wide_rows %}
+  <dl class="title-block-wide">
+    {% for label, value in wide_rows %}
+      <div class="title-block-cell"><dt>{{ label }}</dt><dd>{{ value }}</dd></div>
+    {% endfor %}
+  </dl>
+  {% endif %}
+</article>
+{% endmacro %}
+
+{# One listing in a grid of results: a small title block. `href` is the detail page.
+   facts: list of (label, value) pairs. The stamp states the offer (Swap, Lend, Give away). #}
+{% macro listing_photo(key, title, size="card") %}
+<img class="photo photo-{{ size }}" src="{{ url_for('photos.serve', key=key) }}" alt="{{ title|photo_alt }}" loading="lazy" decoding="async">
+{%- endmacro %}
+
+{# `photo_key` (optional) adds the small photo above the title. #}
+{% macro listing_card(title, href, facts, stamp_label=None, stamp_kind="neutral", photo_key=None) %}
+<article class="listing-card">
+  {% if photo_key %}<div class="listing-card-photo">{{ listing_photo(photo_key, title, "card") }}</div>{% endif %}
+  <header class="listing-card-head">
+    <h2 class="listing-card-title"><a href="{{ href }}">{{ title }}</a></h2>
+    {% if stamp_label %}{{ status(stamp_label, stamp_kind) }}{% endif %}
+  </header>
+  <dl class="listing-card-facts">
+    {% for label, value in facts %}
+      <div class="listing-card-fact"><dt>{{ label }}</dt><dd>{{ value }}</dd></div>
+    {% endfor %}
+  </dl>
+</article>
+{% endmacro %}
+
+{# Flash or inline message. Problems use role=alert, everything else role=status. #}
+{% macro alert(message, kind="info") %}
+<p class="alert alert-{{ kind }}" role="{{ 'alert' if kind == 'danger' else 'status' }}">{{ message }}</p>
+{% endmacro %}
+
+{# columns: list of (label, is_number) pairs. rows: list of lists, same length as columns.
+   caption is required: it names the table for screen readers. #}
+{% macro table(caption, columns, rows) %}
+<div class="table-wrap">
+  <table class="table">
+    <caption>{{ caption }}</caption>
+    <thead>
+      <tr>{% for label, is_number in columns %}<th scope="col"{% if is_number %} class="num"{% endif %}>{{ label }}</th>{% endfor %}</tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>{% for cell in row %}<td{% if columns[loop.index0][1] %} class="num"{% endif %}>{{ cell }}</td>{% endfor %}</tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endmacro %}
+
+{# Page links. `endpoint` + `args` build every link with url_for, so filters survive paging.
+   Nothing is drawn when there is only one page. #}
+{% macro pagination(page, pages, endpoint, args={}) %}
+{% if pages > 1 %}
+<nav class="pagination" aria-label="Pages">
+  {% if page > 1 %}<a class="page-link" href="{{ url_for(endpoint, page=page - 1, **args) }}" rel="prev">Previous</a>
+  {% else %}<span class="page-link page-link-off" aria-disabled="true">Previous</span>{% endif %}
+  <span class="page-status">Page {{ page }} of {{ pages }}</span>
+  {% if page < pages %}<a class="page-link" href="{{ url_for(endpoint, page=page + 1, **args) }}" rel="next">Next</a>
+  {% else %}<span class="page-link page-link-off" aria-disabled="true">Next</span>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}
+
+{# --- The three non-success states of every data view --- #}
+
+{% macro empty_state(title, message, action_label=None, action_href=None) %}
+<section class="state">
+  {{ illustration("box", "state-art") }}
+  <h2 class="state-title">{{ title }}</h2>
+  <p>{{ message }}</p>
+  {% if action_label and action_href %}<a class="btn btn-primary" href="{{ action_href }}">{{ action_label }}</a>{% endif %}
+</section>
+{% endmacro %}
+
+{# Says what went wrong and how to fix it. No apology. #}
+{% macro problem_state(title, message, retry_href=None, retry_label="Try again") %}
+<section class="state state-problem" role="alert">
+  <h2 class="state-title">{{ title }}</h2>
+  <p>{{ message }}</p>
+  {% if retry_href %}<a class="btn btn-secondary" href="{{ retry_href }}">{{ retry_label }}</a>{% endif %}
+</section>
+{% endmacro %}
+
+{# Skeleton rows while content loads. The text is read aloud; the grey bars are decoration. #}
+{% macro loading_state(label="Loading", rows=3) %}
+<section class="state" role="status" aria-live="polite">
+  <p class="state-loading-label">{{ label }}</p>
+  {% for _ in range(rows) %}<div class="skeleton" aria-hidden="true"></div>{% endfor %}
+</section>
+{% endmacro %}

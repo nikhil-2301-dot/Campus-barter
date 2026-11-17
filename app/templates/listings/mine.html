@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "components/actions.html" import link_button, post_button, confirm_open, dialog with context %}
+{% from "components/display.html" import page_header, status, table, empty_state, problem_state %}
+{% block title %}My listings - Campus Barter{% endblock %}
+{% block content %}
+{#- States: success (table), empty (no listings), problem (query could not run). There is no loading state:
+    the page is built on the server in one query, with no asynchronous step. -#}
+{{ page_header("My listings", "Everything you have posted, with its current status.") }}
+
+{% if load_problem %}
+  {{ problem_state("Your listings could not be loaded", "The list did not load. Reload the page; if it keeps happening, tell an admin.", url_for('listings.my_listings'), "Reload") }}
+{% elif not listings %}
+  {{ empty_state("You have no listings yet", "Post a book, notes or equipment you can swap, lend or give away.", "Post an item", url_for('listings.create')) }}
+{% else %}
+  <div class="toolbar">
+    <p class="results-count">{{ listings|length }} listing{{ 's' if listings|length != 1 else '' }}.</p>
+    {{ link_button("Post an item", url_for('listings.create'), "primary") }}
+  </div>
+  {% set rows = [] %}
+  {% for l in listings %}
+    {% set title_cell %}<a href="{{ url_for('listings.view', listing_id=l['id']) }}">{{ l['title'] }}</a>{% endset %}
+    {% set status_cell %}{{ status(l['status']|status_label, l['status']|status_kind) }}{% endset %}
+    {% set actions_cell %}{% if l['status'] != 'removed' %}<span class="row-actions">{{ link_button("Edit", url_for('listings.edit', listing_id=l['id'])) }}{{ confirm_open("delete-" ~ l['id'], "Delete", url_for('listings.delete', listing_id=l['id'])) }}</span>{% else %}No actions available{% endif %}{% endset %}
+    {% set _ = rows.append([title_cell, l['category'], l['mode']|mode_label, status_cell, actions_cell]) %}
+  {% endfor %}
+  {{ table("Your listings", [("Item", False), ("Item type", False), ("Offered as", False), ("Status", False), ("Actions", False)], rows) }}
+
+  {% for l in listings if l['status'] != 'removed' %}
+    {% call dialog("delete-" ~ l['id'], "Delete this listing?") %}
+      <p><strong>{{ l['title'] }}</strong> will no longer be shown to anyone. Requests still waiting for it will be declined, and an accepted request will be cancelled. This cannot be undone.</p>
+      {{ post_button("Delete listing", url_for('listings.delete', listing_id=l['id']), "danger") }}
+    {% endcall %}
+  {% endfor %}
+{% endif %}
+{% endblock %}

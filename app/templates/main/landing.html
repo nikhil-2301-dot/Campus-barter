@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% from "components/landing_art.html" import swap_icon, hero_art, match_art, orbit %}
+{% block description %}Campus Barter is a student-to-student platform where you trade skills, not money. Offer what you are good at and get help with what you need.{% endblock %}
+{% block title %}Campus Barter: trade skills, not money{% endblock %}
+{% block head_extra %}
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+{% endblock %}
+{% block shell %}
+<div class="lp">
+  <header class="lp-header">
+    <div class="lp-wrap lp-bar">
+      <a class="lp-brand" href="{{ url_for('main.index') }}"><span class="lp-logo">{{ swap_icon() }}</span>Campus&nbsp;<span class="hl">Barter</span></a>
+      <nav aria-label="Main">
+        <ul class="lp-nav"><li><a href="#how">How it works</a></li><li><a href="#why">Why us</a></li><li><a href="#faq">FAQ</a></li></ul>
+      </nav>
+    </div>
+  </header>
+  <main id="main" tabindex="-1">
+    <section class="lp-hero">
+      <div class="lp-wrap lp-split">
+        <div>
+          <h1>Get more done with <span class="mark">your skills</span></h1>
+          <p class="lead">Campus Barter is a student-to-student platform where you trade skills, not money. Offer what you're good at. Get help with what you need, matched right on your campus.</p>
+          <div class="lp-actions">
+            <a class="lp-btn lp-btn-yellow" href="{{ url_for('campuses.new') }}">Join the board <span aria-hidden="true">&rarr;</span></a>
+            <a class="lp-btn lp-btn-outline" href="{{ url_for('auth.login') }}">Sign in</a>
+          </div>
+          <p class="lp-proof"><strong>Many engineering colleges</strong> and polytechnics across Delhi</p>
+        </div>
+        {{ hero_art() }}
+      </div>
+    </section>
+
+    <section class="lp-section" id="how">
+      <div class="lp-wrap lp-split">
+        <div>
+          <h2><span class="mark">Matched with people who want you back</span></h2>
+          <p class="muted">List what you offer and what you need. The moment someone on your campus wants your <span class="chip chip-green">cv design</span> and offers the <span class="chip chip-orange">laptop repair</span> you've been looking for, Campus Barter flags the match and you propose a trade in one tap.</p>
+          <div class="chip-pair"><span class="chip chip-green">cv design</span><span class="pair-icon">{{ swap_icon() }}</span><span class="chip chip-orange">laptop repair</span></div>
+        </div>
+        {{ match_art() }}
+      </div>
+    </section>
+
+    <section class="lp-section lp-mist">
+      <div class="lp-wrap lp-split">
+        {{ orbit([("ZK","blue"),("MO","orange"),("CE","blue"),("FS","green"),("AM","yellow"),("TK","green")]) }}
+        <div>
+          <h2><span class="mark">Your whole campus, one board</span></h2>
+          <p class="muted">Pick your institution once and your board starts at home with the people around you and the skills within reach. Widen the search to other campuses whenever you want; remote-friendly skills travel, in-person ones stay honest about distance.</p>
+          <a class="lp-btn lp-btn-blue" href="{{ url_for('campuses.new') }}">Join your campus board</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="lp-section">
+      <div class="lp-wrap">
+        <h2 class="center">Four steps to your <span class="mark">first swap</span></h2>
+        <p class="muted center">From sign-up to a completed trade, simpler than buying airtime.</p>
+        <ol class="steps">
+          <li class="tint-yellow"><span class="num">01</span><h3>Create your profile</h3><p>Your name, your institution, the skills you offer and the ones you need. Sixty seconds.</p></li>
+          <li class="tint-blue"><span class="num">02</span><h3>Explore the board</h3><p>Browse students on your campus first, or widen the search across Delhi.</p></li>
+          <li class="tint-green"><span class="num">03</span><h3>Propose a trade</h3><p>Pick the skills to swap, add your terms, send it. Matches make it one tap.</p></li>
+          <li class="tint-orange"><span class="num">04</span><h3>Trade, learn, rate</h3><p>Link up on WhatsApp, get it done, rate each other. Reputation is earned.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="lp-section lp-tight" id="why">
+      <div class="lp-wrap">
+        <div class="why">
+          <h2>A better way to learn and grow on campus</h2>
+          <ul class="why-list">
+            <li class="tint-yellow"><span class="why-icon">{{ swap_icon() }}</span><h3>Student to student</h3><p>Trade directly with students at real institutions with no middlemen.</p></li>
+            <li class="tint-orange"><span class="why-icon">{{ swap_icon() }}</span><h3>No money involved</h3><p>Your skills are the currency. Swap, learn, grow together.</p></li>
+            <li class="tint-blue"><span class="why-icon">{{ swap_icon() }}</span><h3>Campus first</h3><p>Your college is your home board, with many Delhi engineering colleges and polytechnics.</p></li>
+            <li class="tint-green"><span class="why-icon">{{ swap_icon() }}</span><h3>Trust you can see</h3><p>Ratings and trade history on every profile. Deliver, and it shows.</p></li>
+            <li class="tint-yellow"><span class="why-icon">{{ swap_icon() }}</span><h3>Private by default</h3><p>Your WhatsApp number is only shared when you accept a trade.</p></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="lp-section" id="faq">
+      <div class="lp-wrap lp-faq">
+        <h2 class="center">Questions students <span class="mark">actually ask</span></h2>
+        <details><summary>Is Campus Barter free?</summary><p>Completely. No fees, no subscriptions, no money anywhere in the app. That's the whole point. Your skills are the currency.</p></details>
+        <details><summary>How do we contact each other after a match?</summary><p>Through WhatsApp, where you already chat. Your number stays private until you accept a trade; then both of you get a chat button. Nobody can see or search your number on your profile.</p></details>
+        <details><summary>What if someone doesn't deliver their side?</summary><p>Every completed trade ends with both people rating each other, and ratings plus trade history show on every profile. Trade with people who deliver. Reputations are earned, not claimed.</p></details>
+        <details><summary>Is my institution supported?</summary><p>We cover many engineering colleges and polytechnics across Delhi. If yours is missing, <a href="{{ url_for('campuses.new') }}">add your campus</a> and we'll put it on the board.</p></details>
+      </div>
+    </section>
+
+    <section class="lp-cta">
+      <div class="lp-wrap center">
+        <h2>Try Campus Barter today</h2>
+        <p class="lead">Join your campus board and make your first swap this week.</p>
+        <a class="lp-btn lp-btn-yellow" href="{{ url_for('auth.signup') }}">Get started for free</a>
+      </div>
+    </section>
+  </main>
+  <footer class="lp-footer"><p>Made for <strong>students</strong>, by <strong>students</strong>. Trade skills. Grow together.</p></footer>
+</div>
+{% endblock %}

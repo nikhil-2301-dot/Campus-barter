@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "components/forms.html" import field %}
+{% from "components/actions.html" import button with context %}
+{% from "components/display.html" import page_header, alert %}
+{% block title %}Log in - Campus Barter{% endblock %}
+{% block content %}
+<div class="narrow">
+  {{ page_header("Log in", "Use your email address and your password.") }}
+  {% if problem %}{{ alert(problem, "danger") }}{% endif %}
+  <form method="post" action="{{ url_for('auth.login') }}" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+    {{ field("email", "Email", type="email", value=email, autocomplete="email", maxlength=limits.email) }}
+    {{ field("password", "Password", type="password", autocomplete="current-password", maxlength=limits.password) }}
+    <div class="form-actions">{{ button("Log in") }}</div>
+  </form>
+  <p>New here? <a href="{{ url_for('auth.signup') }}">Create an account</a></p>
+</div>
+{% endblock %}

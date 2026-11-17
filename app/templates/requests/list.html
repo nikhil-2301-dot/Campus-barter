@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "components/actions.html" import link_button %}
+{% from "components/display.html" import page_header, status, table, empty_state, problem_state %}
+{% block title %}{{ heading }} - Campus Barter{% endblock %}
+{% block content %}
+{#- States: success (table), empty (no requests yet), problem (the list could not load, HTTP 503).
+    No loading state: the page is built on the server in one query, with no asynchronous step. -#}
+{{ page_header(heading, "Requests for items you posted." if kind == 'received' else "Items you asked other students for.") }}
+
+{% if load_problem %}
+  {{ problem_state("Your requests could not be loaded", "The list did not load. Reload the page; if it keeps happening, tell an admin.", url_for('exchange.received' if kind == 'received' else 'exchange.sent'), "Reload") }}
+{% elif not rows %}
+  {% if kind == 'received' %}
+    {{ empty_state("Nobody has asked for your items yet", "When a student requests one of your listings, it will appear here.", "See my listings", url_for('listings.my_listings')) }}
+  {% else %}
+    {{ empty_state("You have not sent any requests yet", "Find something you need and ask the owner for it.", "Browse listings", url_for('listings.browse')) }}
+  {% endif %}
+{% else %}
+  <div class="toolbar">
+    <p class="results-count">{{ rows|length }} request{{ 's' if rows|length != 1 else '' }}.</p>
+    {{ link_button("Requests I sent" if kind == 'received' else "Requests I received", url_for('exchange.sent' if kind == 'received' else 'exchange.received')) }}
+  </div>
+  {% set table_rows = [] %}
+  {% for r in rows %}
+    {% set item_cell %}<a href="{{ url_for('exchange.detail', request_id=r['id']) }}">{{ r['listing_title'] }}</a>{% endset %}
+    {% set status_cell %}{{ status(r['status']|request_status_label, r['status']|request_status_kind) }}{% endset %}
+    {% set who = (r['requester_name'] ~ ", " ~ r['requester_college']) if kind == 'received' else r['owner_name'] %}
+    {% set _ = table_rows.append([item_cell, who, r['offered_title'] or "No item offered", status_cell, r['updated_at'][:10]]) %}
+  {% endfor %}
+  {{ table(heading, [("Item", False), ("From" if kind == 'received' else "Owner", False), ("Offered in return", False), ("Status", False), ("Updated", False)], table_rows) }}
+{% endif %}
+{% endblock %}

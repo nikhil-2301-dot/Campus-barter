@@ -1,0 +1,28 @@
+{#- Pieces of the landing page. Import without context (no url_for or g inside). -#}
+{% from "components/display.html" import status %}
+
+{# A real sequence, so the steps are numbered (the number is drawn by CSS from the list order).
+   steps: list of (title, text) pairs. #}
+{% macro step_list(steps) %}
+<ol class="steps">
+  {% for title, text in steps %}
+  <li class="step"><h3 class="step-title">{{ title }}</h3><p>{{ text }}</p></li>
+  {% endfor %}
+</ol>
+{% endmacro %}
+
+{# One tile per item type. types: list of (label, href, note) triples. #}
+{% macro type_grid(types) %}
+<ul class="type-grid">
+  {% for label, href, note in types %}
+  <li class="type-tile"><a class="type-link" href="{{ href }}">{{ label }}</a><span class="type-note">{{ note }}</span></li>
+  {% endfor %}
+</ul>
+{% endmacro %}
+
+{# A row of neutral stamps (for example Swap, Lend, Give away). `caption` names the list for screen readers. #}
+{% macro stamp_row(labels, caption) %}
+<ul class="stamp-row" aria-label="{{ caption }}">
+  {% for label in labels %}<li>{{ status(label, "neutral") }}</li>{% endfor %}
+</ul>
+{% endmacro %}

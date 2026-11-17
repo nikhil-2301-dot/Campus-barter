@@ -1,0 +1,23 @@
+{#- Decorative line drawings (C18). Import WITHOUT context. Always aria-hidden: they carry no information.
+    Colours come from classes in components.css (tokens only); there are no colour values or style attributes here.
+    name: "drafting" (hero: book, set square, pencil) or "box" (empty states: open box and pencil). -#}
+{% macro illustration(name, extra_class="") %}
+{% if name == "drafting" %}
+<svg class="ill {{ extra_class }}" viewBox="0 0 240 140" aria-hidden="true" focusable="false">
+  <rect class="ill-paper" x="16" y="58" width="96" height="66"/>
+  <path d="M30 58v66M44 76h56M44 90h56M44 104h38"/>
+  <polygon class="ill-fill" points="132,124 224,124 132,36"/>
+  <polygon class="ill-paper" points="146,114 198,114 146,68"/>
+  <path class="ill-soft" d="M16 132h208"/>
+  <polygon class="ill-fill" points="176,24 212,6 218,16 182,34"/>
+  <path d="M176 24l-8 14 14-4"/>
+</svg>
+{% elif name == "box" %}
+<svg class="ill {{ extra_class }}" viewBox="0 0 96 72" aria-hidden="true" focusable="false">
+  <polygon class="ill-paper" points="12,28 48,40 84,28 84,60 48,70 12,60"/>
+  <path d="M12 28l36 12 36-12M48 40v30"/>
+  <polygon class="ill-fill" points="56,6 82,16 78,24 52,14"/>
+  <path d="M52 14l-6 8 10-2"/>
+</svg>
+{% endif %}
+{% endmacro %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% from "components/display.html" import page_header, empty_state, problem_state %}
+{% block title %}{{ page.title }} - Campus Barter{% endblock %}
+{% block content %}
+{{ page_header(page.title, lead) }}
+{% if code == 500 %}
+  {{ problem_state(page.state_title, page.state_text, action_href, action_label) }}
+{% else %}
+  {{ empty_state(page.state_title, page.state_text, action_label, action_href) }}
+{% endif %}
+{% if request_id %}
+  <p class="field-hint">Reference for the admin: <code>{{ request_id }}</code></p>
+{% endif %}
+{% endblock %}

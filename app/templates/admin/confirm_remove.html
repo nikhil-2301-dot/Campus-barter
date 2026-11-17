@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% from "components/actions.html" import link_button, post_button with context %}
+{% from "components/display.html" import page_header, panel %}
+{% block title %}Remove listing - Campus Barter{% endblock %}
+{% block content %}
+{#- The no-JavaScript version of the Remove listing dialog. Nothing changes until the button is pressed. -#}
+<div class="narrow">
+{{ page_header("Remove this listing?", "This page asks before anything is removed.") }}
+{% call panel(listing['title']) %}
+  <p>The listing will no longer be shown to anyone. Requests still waiting for it will be declined, an accepted request will be cancelled, and its open reports will be resolved. This cannot be undone.</p>
+  <div class="filter-actions">
+    {{ post_button("Remove listing", url_for('admin.listing_remove', listing_id=listing['id']), "danger") }}
+    {{ link_button("Keep listing", url_for('admin.report_list')) }}
+  </div>
+{% endcall %}
+</div>
+{% endblock %}

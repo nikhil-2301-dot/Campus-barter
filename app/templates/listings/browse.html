@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "components/forms.html" import field, select %}
+{% from "components/actions.html" import button, link_button with context %}
+{% from "components/display.html" import page_header, panel, alert, listing_card, pagination, empty_state, problem_state, loading_state %}
+{% block title %}Browse listings - Campus Barter{% endblock %}
+{% block content %}
+{{ page_header("Browse listings", "Books, notes, drafters, lab coats and more, offered by students in your college community.") }}
+
+<form method="get" action="{{ url_for('listings.browse') }}" id="browse-form" role="search" aria-label="Filter listings">
+  {% call panel() %}
+  <div class="filter-form">
+    {{ field("q", "Search", type="search", value=q, maxlength=search_max, autocomplete="off", required=False, optional_mark=False, hint="Looks in the title and description.") }}
+    {{ select("category", "Item type", category_options, value=cat, required=False, placeholder="All item types", optional_mark=False) }}
+    {{ select("condition", "Condition", condition_options, value=cond, required=False, placeholder="Any condition", optional_mark=False) }}
+    {{ select("mode", "Offered as", mode_options, value=mode_filter, required=False, placeholder="Any way", optional_mark=False) }}
+  </div>
+  <div class="filter-actions">
+    {{ button("Search") }}
+    {{ link_button("Clear filters", url_for('listings.browse')) }}
+  </div>
+  {% endcall %}
+</form>
+
+{% if load_problem %}
+  {{ problem_state("Listings could not be loaded", "The list did not load. Reload the page; if it keeps happening, tell an admin.", url_for('listings.browse', q=q or None, category=cat or None, condition=cond or None, mode=mode_filter or None), "Reload") }}
+{% else %}
+  {% if ignored %}
+    {{ alert("Ignored an unknown value for: " ~ ignored|join(", ") ~ ". Showing results for the other filters.", "warning") }}
+  {% endif %}
+
+  <div id="browse-loading" hidden>{{ loading_state("Loading listings") }}</div>
+  <div id="browse-results">
+    <div class="toolbar">
+      <p class="results-count">{{ total }} listing{{ 's' if total != 1 else '' }} found.</p>
+      {% if g.user %}{{ link_button("Post an item", url_for('listings.create'), "primary") }}{% endif %}
+    </div>
+
+    {% if listings %}
+      <ul class="listing-grid">
+        {% for l in listings %}
+        <li>
+          {{ listing_card(l['title'], url_for('listings.view', listing_id=l['id']),
+                          [("Item type", l['category']), ("Condition", l['condition']|condition_label), ("Owner", l['owner_name'])],
+                          l['mode']|mode_label, photo_key=l['photo_key']) }}
+        </li>
+        {% endfor %}
+      </ul>
+      {{ pagination(page, total_pages, "listings.browse", {"q": q or None, "category": cat or None, "condition": cond or None, "mode": mode_filter or None}) }}
+    {% elif filtered %}
+      {{ empty_state("No listings match your search", "Try a different word or clear the filters, or post the item you are looking for.", "Clear filters", url_for('listings.browse')) }}
+    {% elif g.user %}
+      {{ empty_state("Nothing has been posted yet", "Be the first: post a book, notes or equipment you can swap, lend or give away.", "Post an item", url_for('listings.create')) }}
+    {% else %}
+      {{ empty_state("Nothing has been posted yet", "Log in to post the first item.", "Log in", url_for('auth.login')) }}
+    {% endif %}
+  </div>
+  <script src="{{ url_for('static', filename='js/browse.js') }}" defer></script>
+{% endif %}
+{% endblock %}

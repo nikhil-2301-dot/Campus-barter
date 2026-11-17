@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "components/actions.html" import link_button %}
+{% from "components/display.html" import page_header, status, table, empty_state, problem_state %}
+{% block title %}Reports - Campus Barter{% endblock %}
+{% block content %}
+{#- States: success (table), empty (no reports with this filter), problem (503). No loading state: server-rendered. -#}
+{{ page_header("Reports", "Listings that students have reported.") }}
+<div class="toolbar">
+  {% for f in filters %}
+    {{ link_button((f|report_status_label) if f != 'all' else 'All', url_for('admin.report_list', status=f), "primary" if f == status else "secondary") }}
+  {% endfor %}
+  {{ link_button("Dashboard", url_for('admin.dashboard')) }}
+</div>
+{% if load_problem %}
+  {{ problem_state("Reports could not be loaded", "The list did not load. Reload the page; if it keeps happening, check the server log.", url_for('admin.report_list', status=status), "Reload") }}
+{% elif not rows %}
+  {{ empty_state("No reports here", "Nothing matches this filter.", "Show all reports", url_for('admin.report_list', status='all')) }}
+{% else %}
+  <p class="results-count">{{ rows|length }} report{{ 's' if rows|length != 1 else '' }}.</p>
+  {% set table_rows = [] %}
+  {% for r in rows %}
+    {% set item_cell %}<a href="{{ url_for('admin.report_detail', report_id=r['id']) }}">{{ r['listing_title'] }}</a>{% endset %}
+    {% set status_cell %}{{ status(r['status']|report_status_label, r['status']|report_status_kind) }}{% endset %}
+    {% set _ = table_rows.append([item_cell, r['reporter_name'] ~ ", " ~ r['reporter_college'], r['created_at'][:10], status_cell]) %}
+  {% endfor %}
+  {{ table("Reports (" ~ (status|report_status_label if status != 'all' else 'all') ~ ")", [("Listing", False), ("Reported by", False), ("Date", False), ("Status", False)], table_rows) }}
+{% endif %}
+{% endblock %}

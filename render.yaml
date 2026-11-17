@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: campus-barter
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: flask --app app migrate && bash start.sh
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: APP_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: TRUSTED_PROXIES
+        value: "1"
+      - key: BIND
+        value: 0.0.0.0:10000

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "components/forms.html" import field, select, problem_summary %}
+{% from "components/actions.html" import button with context %}
+{% from "components/display.html" import page_header %}
+{% block title %}Add your campus - Campus Barter{% endblock %}
+{% block content %}
+{#- States: form (success), refused (400, problems shown above and next to each field), capped (429 page).
+    No loading state: one plain form, no asynchronous step. -#}
+<div class="narrow">
+  {{ page_header("Add your campus", "Tell us which college you study at. Engineering colleges and polytechnics in Delhi are welcome. No account is needed for this step.") }}
+  {{ problem_summary(problems, [("college_name", "College name"), ("area", "Area"), ("kind", "Type of college")]) }}
+  <form method="post" action="{{ url_for('campuses.new') }}" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {{ field("college_name", "College name", value=values.get("college_name", ""), problem=problems.get("college_name"), hint="The full name, e.g. Maharaja Surajmal Institute of Technology", autocomplete="off", maxlength=limits.college_name) }}
+    {{ field("area", "Area", value=values.get("area", ""), problem=problems.get("area"), hint="Where the campus is, e.g. Janakpuri, West Delhi", autocomplete="off", maxlength=limits.area) }}
+    {{ select("kind", "Type of college", kind_options, value=values.get("kind", ""), problem=problems.get("kind")) }}
+    <div class="form-actions">{{ button("Add my campus") }}</div>
+  </form>
+  {% if not g.user %}<p>Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>{% endif %}
+</div>
+{% endblock %}

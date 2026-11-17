@@ -1,0 +1,43 @@
+{#- Buttons, link buttons and the native dialog. Every button has visible text (the `label` argument is required). -#}
+
+{# variant: primary | secondary | danger #}
+{% macro button(label, type="submit", variant="primary", disabled=False, name=None, value=None) %}
+<button class="btn btn-{{ variant }}" type="{{ type }}"{% if name %} name="{{ name }}"{% endif %}{% if value is not none %} value="{{ value }}"{% endif %}{% if disabled %} disabled{% endif %}>{{ label }}</button>
+{% endmacro %}
+
+{% macro link_button(label, href, variant="secondary") %}
+<a class="btn btn-{{ variant }}" href="{{ href }}">{{ label }}</a>
+{% endmacro %}
+
+{# A one-button POST form with the CSRF token already in it (log out, delete, mark as returned...).
+   Import this file `with context` so csrf_token() is available. #}
+{% macro post_button(label, action, variant="secondary") %}
+<form class="inline-form" method="post" action="{{ action }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {{ button(label, variant=variant) }}
+</form>
+{% endmacro %}
+
+{# Opens the <dialog> with this id. Needs static/js/dialog.js (loaded by base.html). #}
+{% macro dialog_open(dialog_id, label, variant="secondary") %}
+<button class="btn btn-{{ variant }}" type="button" data-dialog-open="{{ dialog_id }}" aria-haspopup="dialog">{{ label }}</button>
+{% endmacro %}
+
+{# Native modal dialog. The body goes in the {% call %} block. The Cancel button always works, and Esc closes it. #}
+{% macro dialog(dialog_id, title, close_label="Cancel") %}
+<dialog class="dialog" id="{{ dialog_id }}" aria-labelledby="{{ dialog_id }}-title">
+  <h2 class="dialog-title" id="{{ dialog_id }}-title">{{ title }}</h2>
+  <div>{{ caller() }}</div>
+  <div class="dialog-close-row">
+    <button class="btn btn-secondary" type="button" data-dialog-close>{{ close_label }}</button>
+  </div>
+</dialog>
+{% endmacro %}
+
+{# A destructive action that works with and without JavaScript. Without JS the visitor sees a plain link to
+   `fallback_href` (a confirmation page). With JS, dialog.js hides the link and shows a button that opens the
+   <dialog> with this id (draw it with dialog() next to it). Both show the same `label`. #}
+{% macro confirm_open(dialog_id, label, fallback_href, variant="danger") %}
+<span data-no-js>{{ link_button(label, fallback_href, variant) }}</span>
+<span data-needs-js hidden>{{ dialog_open(dialog_id, label, variant) }}</span>
+{% endmacro %}

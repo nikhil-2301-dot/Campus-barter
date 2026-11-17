@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "components/actions.html" import link_button, post_button with context %}
+{% from "components/display.html" import page_header, panel %}
+{% from "components/admin_confirm.html" import suspend_text %}
+{% block title %}Suspend user - Campus Barter{% endblock %}
+{% block content %}
+{#- The no-JavaScript version of the Suspend dialog. Nothing changes until the button is pressed. -#}
+<div class="narrow">
+{{ page_header("Suspend this account?", "This page asks before anything changes.") }}
+{% call panel(target['full_name']) %}
+  {{ suspend_text(target) }}
+  <div class="filter-actions">
+    {{ post_button("Suspend account", url_for('admin.user_suspend', user_id=target['id']), "danger") }}
+    {{ link_button("Keep account active", url_for('admin.user_list')) }}
+  </div>
+{% endcall %}
+</div>
+{% endblock %}

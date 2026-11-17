@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "components/actions.html" import link_button %}
+{% from "components/display.html" import page_header, table, empty_state, problem_state %}
+{% block title %}Campuses - Campus Barter{% endblock %}
+{% block content %}
+{#- States: success (table), empty (nothing suggested yet), problem (503). No loading state: server-rendered. -#}
+{{ page_header("Campuses", "Colleges that students asked us to add, newest first.") }}
+<div class="toolbar">{{ link_button("Dashboard", url_for('admin.dashboard')) }}</div>
+{% if load_problem %}
+  {{ problem_state("Campuses could not be loaded", "The list did not load. Reload the page; if it keeps happening, check the server log.", url_for('admin.campus_list'), "Reload") }}
+{% elif not rows %}
+  {{ empty_state("No campuses yet", "When someone uses the Add your campus page it will appear here.") }}
+{% else %}
+  <p class="results-count">{{ rows|length }} campus{{ 'es' if rows|length != 1 else '' }}.</p>
+  {% set table_rows = [] %}
+  {% for r in rows %}
+    {% set _ = table_rows.append([r['college_name'], r['area'], kinds.get(r['kind'], r['kind']), r['created_at'][:10]]) %}
+  {% endfor %}
+  {{ table("Campus suggestions", [("College", False), ("Area", False), ("Type", False), ("Date", False)], table_rows) }}
+{% endif %}
+{% endblock %}

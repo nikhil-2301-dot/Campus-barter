@@ -1,0 +1,85 @@
+/* Base styles: reset, typography, links, focus, motion.
+   Uses tokens only: no colour literals here (a test enforces it). Components come in C7. */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: var(--space-8); }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-heading);
+  line-height: var(--leading-tight);
+  margin: var(--space-5) 0 var(--space-3);
+}
+h1 { font-size: var(--text-2xl); margin-top: 0; }
+h2 { font-size: var(--text-xl); }
+h3 { font-size: var(--text-lg); }
+h4 { font-size: var(--text-md); }
+
+p { max-width: var(--measure); margin: 0 0 var(--space-4); }
+
+a { color: var(--link); text-underline-offset: 0.18em; }
+a:hover { text-decoration-thickness: 2px; }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+img { max-width: 100%; height: auto; }
+
+::selection { background: var(--pencil); color: var(--ink); }
+
+:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+/* ---------- page layout: one drawing sheet on the graph-paper ground ---------- */
+.page {
+  max-width: var(--page-max);
+  margin: 0 auto var(--space-6);
+  padding: var(--space-5) var(--space-5) var(--space-6);
+  background: var(--sheet);
+  border: var(--rule-strong) solid var(--ink);
+  border-radius: var(--radius-panel);
+}
+.narrow { max-width: 38rem; }
+
+.site-footer {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 var(--space-5) var(--space-6);
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+.site-footer p { margin: 0; }
+
+/* skip link: hidden until a keyboard user tabs to it */
+.skip-link {
+  position: absolute;
+  left: var(--space-3);
+  top: calc(-1 * var(--space-9));
+  z-index: 10;
+  padding: var(--space-2) var(--space-4);
+  background: var(--sheet);
+  color: var(--ink);
+  border: var(--rule-strong) solid var(--ink);
+  font-weight: var(--weight-strong);
+}
+.skip-link:focus { top: var(--space-3); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% from "components/forms.html" import select, textarea %}
+{% from "components/actions.html" import button, link_button, post_button, confirm_open, dialog with context %}
+{% from "components/display.html" import panel, title_block, alert, status, listing_photo %}
+{% block title %}{{ listing['title'] }} - Campus Barter
+{% endblock %}
+{% block content %}
+{{ title_block(listing['title'],
+               [("Item type", listing['category']),
+                ("Condition", listing['condition']|condition_label),
+                ("Offered as", listing['mode']|mode_label),
+                ("Owner", listing['owner_name'])],
+               status_label=listing['status']|status_label, status_kind=listing['status']|status_kind, level=1,
+               wide_rows=([("Wanted in return", listing['wanted_in_return'])] if listing['wanted_in_return'] else ())) }}
+
+{% if listing['photo_key'] %}
+  <figure class="listing-photo">{{ listing_photo(listing['photo_key'], listing['title'], "detail") }}</figure>
+{% endif %}
+
+{% if listing['description'] %}
+  {% call panel("Description") %}
+    <p class="listing-description">{{ listing['description'] }}</p>
+  {% endcall %}
+{% endif %}
+
+{% if g.user and (g.user['id'] == listing['owner_id'] or g.user['is_admin']) and listing['status'] != 'removed' %}
+  {% call panel("Manage this listing") %}
+  <div class="filter-actions">
+    {{ link_button("Edit", url_for('listings.edit', listing_id=listing['id'])) }}
+    {{ confirm_open("delete-listing", "Delete", url_for('listings.delete', listing_id=listing['id'])) }}
+  </div>
+  {% endcall %}
+  {% call dialog("delete-listing", "Delete this listing?") %}
+    <p>The listing will no longer be shown to anyone. Requests still waiting for it will be declined, and an accepted request will be cancelled. This cannot be undone.</p>
+    {{ post_button("Delete listing", url_for('listings.delete', listing_id=listing['id']), "danger") }}
+  {% endcall %}
+{% endif %}
+
+{#- Request area, by who is looking: guest -> log-in invite; owner -> link to received requests; admin (not the
+    owner) -> a note, no form; student with an open request -> "You already requested this"; otherwise the form
+    (only while the item is available). -#}
+{% if not g.user %}
+  {% if listing['status'] == 'available' %}
+    {% call panel("Request this item") %}
+      <p>Log in to send a request to the owner.</p>
+      {{ link_button("Log in to request", url_for('auth.login', next=request.path), "primary") }}
+    {% endcall %}
+  {% endif %}
+{% elif g.user['id'] == listing['owner_id'] %}
+  {% if not g.user['is_admin'] %}
+    {{ link_button("See requests for your items", url_for('exchange.received')) }}
+  {% endif %}
+{% elif g.user['is_admin'] %}
+  {{ alert("Admins moderate listings and do not take part in swaps, so there is no request form for you.", "info") }}
+{% elif my_open_request %}
+  {% call panel("You already requested this") %}
+    <p>Your request is {{ status(my_open_request['status']|request_status_label, my_open_request['status']|request_status_kind) }}. You can only have one open request for an item.</p>
+    {{ link_button("View your request", url_for('exchange.detail', request_id=my_open_request['id']), "primary") }}
+  {% endcall %}
+{% elif listing['status'] == 'available' %}
+  {% call panel("Request this item") %}
+  <form method="post" action="{{ url_for('exchange.send', listing_id=listing['id']) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if listing['mode'] == 'swap' and my_offerable %}
+      {{ select("offered_listing_id", "Offer one of your items in return", my_offerable_options, required=False, placeholder="No item (just ask)") }}
+    {% endif %}
+    {{ textarea("message", "Message to the owner", required=False, rows=3, maxlength=500) }}
+    {{ button("Send request") }}
+  </form>
+  {% endcall %}
+{% else %}
+  {{ alert("This item is not available to request right now.", "info") }}
+{% endif %}
+
+{#- Report area: guest -> log-in invite; student (not owner) -> form, or "already reported"; owners and admins see
+    nothing. Reporters are never shown to anyone but admins. -#}
+{% if not g.user %}
+  <p><a href="{{ url_for('auth.login', next=request.path) }}">Log in to report this listing</a></p>
+{% elif my_open_report %}
+  {% call panel("You already reported this listing") %}
+    <p>An admin will review your report. You can only have one open report for an item.</p>
+  {% endcall %}
+{% elif can_report %}
+  {% call panel("Report this listing") %}
+  <form method="post" action="{{ url_for('reports.send', listing_id=listing['id']) }}" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {{ textarea("reason", "Why are you reporting this?", value=report_text, problem=report_problem, rows=3, maxlength=reason_max, hint="10 to 500 characters. Only admins see who reported.") }}
+    {{ button("Send report", variant="secondary") }}
+  </form>
+  {% endcall %}
+{% endif %}
+
+<p class="back-row">{{ link_button("Back to listings", url_for('listings.browse')) }}</p>
+
+{% endblock %}

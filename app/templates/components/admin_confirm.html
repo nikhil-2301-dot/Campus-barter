@@ -1,0 +1,5 @@
+{#- The sentence that explains what Suspend does. Used by the dialog on the users page and by the plain confirm
+    page, so both always say the same thing. -#}
+{% macro suspend_text(target) %}
+<p>Suspend <strong>{{ target['full_name'] }}</strong>? They are logged out and cannot log in again until you unsuspend them. Their listings and requests stay as they are, but they cannot act on them.</p>
+{% endmacro %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "components/actions.html" import link_button, post_button with context %}
+{% from "components/display.html" import page_header, panel %}
+{% from "components/request_confirm.html" import confirm_text %}
+{% block title %}{{ 'Decline this request?' if action == 'decline' else 'Cancel this request?' }} - Campus Barter
+{% endblock %}
+{% block content %}
+{#- The no-JavaScript version of the Decline / Cancel dialog. Nothing changes until the button is pressed. -#}
+<div class="narrow">
+{{ page_header('Decline this request?' if action == 'decline' else 'Cancel this request?', "This page asks before anything changes.") }}
+{% call panel(req['listing_title']) %}
+  {{ confirm_text(action, req) }}
+  <div class="filter-actions">
+    {{ post_button(labels[action], url_for('exchange.change', request_id=req['id'], action=action), "danger") }}
+    {{ link_button("Keep request", url_for('exchange.detail', request_id=req['id'])) }}
+  </div>
+{% endcall %}
+</div>
+
+{% endblock %}

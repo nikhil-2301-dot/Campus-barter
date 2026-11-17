@@ -1,0 +1,116 @@
+{#- Form components. Every control has a visible <label>. Help text and the problem message are linked
+    with aria-describedby. Ids: f-NAME (control), h-NAME (hint), p-NAME (problem). -#}
+
+{% macro _describedby(name, hint, problem) -%}
+{%- if hint or problem %} aria-describedby="{% if hint %}h-{{ name }}{% endif %}{% if hint and problem %} {% endif %}{% if problem %}p-{{ name }}{% endif %}"{% endif -%}
+{%- endmacro %}
+
+{% macro _meta(name, label, required, hint, optional_mark=True) -%}
+<label for="f-{{ name }}" class="field-label">{{ label }}{% if not required and optional_mark %} <span class="field-optional">(optional)</span>{% endif %}</label>
+{% if hint %}<p class="field-hint" id="h-{{ name }}">{{ hint }}</p>{% endif %}
+{%- endmacro %}
+
+{% macro _problem(name, problem) -%}
+{% if problem %}<p class="field-problem" id="p-{{ name }}" role="alert">{{ problem }}</p>{% endif %}
+{%- endmacro %}
+
+{% macro field(name, label, type="text", value="", problem=None, hint=None, required=True,
+               autocomplete=None, maxlength=None, disabled=False, optional_mark=True) %}
+<div class="field{% if problem %} field-has-problem{% endif %}">
+  {{ _meta(name, label, required, hint, optional_mark) }}
+  <input class="control" id="f-{{ name }}" name="{{ name }}" type="{{ type }}"
+         {% if type != 'password' %}value="{{ value }}"{% endif %}
+         {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+         {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+         {% if required %}required{% endif %}
+         {% if disabled %}disabled{% endif %}
+         {% if problem %}aria-invalid="true"{% endif %}{{ _describedby(name, hint, problem) }}>
+  {{ _problem(name, problem) }}
+</div>
+{% endmacro %}
+
+{# `optional_mark=False` hides the "(optional)" tag (for search filters, which are all optional).
+   options: list of (value, label) pairs. An empty-value placeholder is added when `placeholder` is set. #}
+{% macro select(name, label, options, value="", problem=None, hint=None, required=True,
+                placeholder="Choose...", disabled=False, optional_mark=True) %}
+<div class="field{% if problem %} field-has-problem{% endif %}">
+  {{ _meta(name, label, required, hint, optional_mark) }}
+  <select class="control" id="f-{{ name }}" name="{{ name }}"
+          {% if required %}required{% endif %}
+          {% if disabled %}disabled{% endif %}
+          {% if problem %}aria-invalid="true"{% endif %}{{ _describedby(name, hint, problem) }}>
+    {% if placeholder %}<option value=""{% if not value %} selected{% endif %}>{{ placeholder }}</option>{% endif %}
+    {% for opt_value, opt_label in options %}
+      <option value="{{ opt_value }}"{% if opt_value == value %} selected{% endif %}>{{ opt_label }}</option>
+    {% endfor %}
+  </select>
+  {{ _problem(name, problem) }}
+</div>
+{% endmacro %}
+
+{% macro textarea(name, label, value="", problem=None, hint=None, required=True, rows=4,
+                  maxlength=None, disabled=False) %}
+<div class="field{% if problem %} field-has-problem{% endif %}">
+  {{ _meta(name, label, required, hint) }}
+  <textarea class="control" id="f-{{ name }}" name="{{ name }}" rows="{{ rows }}"
+            {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+            {% if required %}required{% endif %}
+            {% if disabled %}disabled{% endif %}
+            {% if problem %}aria-invalid="true"{% endif %}{{ _describedby(name, hint, problem) }}>{{ value }}</textarea>
+  {{ _problem(name, problem) }}
+</div>
+{% endmacro %}
+
+{# A file picker for one listing photo. The browser's own picker is used (keyboard and screen reader friendly).
+   `accept` only narrows the picker: the server checks the real type from the file's first bytes. #}
+{% macro photo_field(name="photo", label="Photo", problem=None, hint=None, required=False) %}
+<div class="field{% if problem %} field-has-problem{% endif %}">
+  {{ _meta(name, label, required, hint) }}
+  <input class="control control-file" id="f-{{ name }}" name="{{ name }}" type="file"
+         accept="image/jpeg,image/png,image/webp"
+         {% if required %}required{% endif %}
+         {% if problem %}aria-invalid="true"{% endif %}{{ _describedby(name, hint, problem) }}>
+  {{ _problem(name, problem) }}
+</div>
+{% endmacro %}
+
+{% macro checkbox(name, label, checked=False, value="1", problem=None, hint=None, disabled=False) %}
+<div class="field field-check{% if problem %} field-has-problem{% endif %}">
+  <div class="check-row">
+    <input class="check-box" id="f-{{ name }}" name="{{ name }}" type="checkbox" value="{{ value }}"
+           {% if checked %}checked{% endif %}
+           {% if disabled %}disabled{% endif %}
+           {% if problem %}aria-invalid="true"{% endif %}{{ _describedby(name, hint, problem) }}>
+    <label for="f-{{ name }}" class="field-label">{{ label }}</label>
+  </div>
+  {% if hint %}<p class="field-hint" id="h-{{ name }}">{{ hint }}</p>{% endif %}
+  {{ _problem(name, problem) }}
+</div>
+{% endmacro %}
+
+{# A titled group of related fields (a <fieldset> with a <legend>). The fields go in the {% call %} block. #}
+{% macro form_section(title, hint=None) %}
+<fieldset class="form-section">
+  <legend class="form-section-title">{{ title }}</legend>
+  {% if hint %}<p class="form-section-hint">{{ hint }}</p>{% endif %}
+  {{ caller() }}
+</fieldset>
+{% endmacro %}
+
+{# Problem summary for LONG forms (more than 5 controls): one box above the form that lists every field
+   problem as a link to its field. `problems` is the name -> message dict; `fields` is a list of
+   (name, label) pairs in the order the fields appear. Short forms do not use it (the message sits by the field). #}
+{% macro problem_summary(problems, fields) %}
+{% set ns = namespace(count=0) %}
+{% for name, label in fields %}{% if problems.get(name) %}{% set ns.count = ns.count + 1 %}{% endif %}{% endfor %}
+{% if ns.count %}
+<div class="problem-summary" id="problem-summary" role="alert">
+  <h2 class="problem-summary-title">{% if ns.count == 1 %}There is 1 problem with this form{% else %}There are {{ ns.count }} problems with this form{% endif %}</h2>
+  <ul class="problem-summary-list">
+    {% for name, label in fields %}{% if problems.get(name) %}
+    <li><a href="#f-{{ name }}">{{ label }}: {{ problems.get(name) }}</a></li>
+    {% endif %}{% endfor %}
+  </ul>
+</div>
+{% endif %}
+{% endmacro %}
