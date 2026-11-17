@@ -2,5 +2,5 @@
 # Install:  pip install -r requirements-dev.txt     (this file includes requirements.txt)
 -r requirements.txt
 beautifulsoup4==4.15.0
-soupsieve==3.0.3
+soupsieve==4.1
 pillow==13.0.0
